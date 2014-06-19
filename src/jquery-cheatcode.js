@@ -4,6 +4,11 @@
    This plugin enables the addition of "cheat codes" to any web page.  By default, it configures
    a simple alert window when the standard "Konami" code is typed, but it can support more or less
    arbitrary cheat codes (no modifier keys are currently supported) and arbitrary callbacks.
+
+   I have gone to some trouble to support Firefox despite their "quirky" attitude toward standard key codes.
+   I have not gone to such efforts for Opera.
+
+   Basic usage: $(document).cheatcode(function(event){alert("We did it!");});
  */
 (function($) {
     /*
@@ -35,10 +40,10 @@
         KEYPAD_DIVIDE   : 111,
         KEYPAD_POINT    : 110,
         // annoying special cases:
-        ';' : 186,
-        '=' : 187,
+        ';' : 186, // FF: 59
+        '=' : 187, // FF: 61
         ',' : 188,
-        '-' : 189,
+        '-' : 189, // FF: 173
         '.' : 190,
         '/' : 191,
         '`' : 192,
@@ -48,6 +53,15 @@
         "'" : 222
 
     };
+
+    // You would think that $.browser.mozilla would be the way to go, except jQuery decided
+    // to stop supporting it
+    if (navigator.userAgent.match(/firefox/i)) {
+        KEYCODE[';'] = 59;
+        KEYCODE['='] = 61;
+        KEYCODE['-'] = 173;
+    }
+
     // top-row 0 is 48, A is 65, use those as offsets
     var ZERO_KEY_CODE = 48;
     var A_KEY_CODE = 65;
@@ -77,6 +91,10 @@
         alert("Cheat code invoked!");
     }
 
+    /**
+       Translate a cheat-code specification to a list of the actual character codes
+       that will show up in the event handler.
+     */
     function toKeyCode(userKeyList) {
         if (Array !== userKeyList.constructor) {
             throw "Argument to userKeyList should be array, was " + userKeyList;
