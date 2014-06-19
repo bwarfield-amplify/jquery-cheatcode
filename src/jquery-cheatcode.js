@@ -31,8 +31,9 @@
 
     var KONAMI = [ "UP", "UP", "DOWN", "DOWN", "LEFT", "RIGHT", "LEFT", "RIGHT", "B", "A" ];
 
+    var TIMEOUT_MILLISECONDS = 10000;
+
     function demo_callback(e) {
-        console.log(this,e);
         alert("Cheat code invoked!");
     }
 
@@ -78,13 +79,22 @@
     var activeCheat;
     var cheatIndex;
     var cheatCallback;
+    var lastKeydownTime;
 
     /* keydown handler */
     function cheat_keydown(e) {
         if (undefined !== activeCheat) {
+            var now = new Date().getTime();
+            if (0 !== cheatIndex) {
+                if (now - lastKeydownTime >= TIMEOUT_MILLISECONDS) {
+                    console.log("Timed out: resetting");
+                    cheatIndex = 0;
+                }
+            }
             if (activeCheat[cheatIndex] === e.which) {
                 console.log("incrementing");
                 cheatIndex++;
+                lastKeydownTime = now;
             } else {
                 console.log("Resetting");
                 cheatIndex = 0;
