@@ -1,3 +1,10 @@
+/**
+   jquery-cheatcode plugin
+
+   This plugin enables the addition of "cheat codes" to any web page.  By default, it configures
+   a simple alert window when the standard "Konami" code is typed, but it can support more or less
+   arbitrary cheat codes (no modifier keys are currently supported) and arbitrary callbacks.
+ */
 (function($) {
     /*
       Constants section
@@ -51,6 +58,16 @@
     var TIMEOUT_MILLISECONDS = 10000;
     var DEBUG = false;
 
+    var COMMAND_DISPATCH = {
+        "debug" : function(flag) {
+            if (undefined !== flag) { DEBUG = flag; }
+            else { DEBUG = !DEBUG; }
+        },
+        "timeout" : function(timeoutmillis) {
+            if (0 < timeoutmillis) { TIMEOUT_MILLISECONDS = timeoutmillis; }
+            else { TIMEOUT_MILLISECONDS = 10000; }
+        },
+    };
     function debug() {
         if (DEBUG && console && console.log) {
             console.log.apply(console, arguments);
@@ -130,14 +147,19 @@
     }
 
     $.fn.cheatcode = function(codeOrCallback, callbackOrNothing){
-        if ("debug" === codeOrCallback) {
-            DEBUG = true;
-            return this;
-        }
         var userCode;
         var callback;
         if (undefined !== codeOrCallback) {
             switch(codeOrCallback.constructor) {
+            // STRINGS ARE SPECIAL in that they are commands: no processing after the dispatch step
+            case String:
+                var command = COMMAND_DISPATCH[codeOrCallback];
+                if (undefined === command) {
+                    throw "Unknown command " + command;
+                } else {
+                    command(callbackOrNothing);
+                }
+                return this;
             case Function:
                 callback = codeOrCallback;
                 break;
