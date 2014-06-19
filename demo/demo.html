@@ -3,10 +3,29 @@
 <title>Cheat Code Demonstration</title>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <script type="text/javascript" src="../src/jquery-cheatcode.js"></script>
-<script type="text/javascript">$(document).cheatcode()</script>
+<script type="text/javascript">
+function whonow(newname) {
+    var header = $("h1");
+    header.text(header.text().replace(/,\s+\w+/, ", " + newname));
+}
+function cheat() {
+    whonow("cheater");
+}
+function goooool() {
+    var img = $("#vanpersie");
+    $("body").css({"background-color" : "orange"});
+    whonow("Spain");
+    img.animate({ left : "0%"}, 2000);
+}
+$(document).cheatcode([5, '-', 1], goooool)</script>
 </head>
 
 <body>
 <h1>Hello, world!</h1>
+<form>
+    <textarea cols=100 rows=5>What was the score of that game, again?</textarea>
+</form>
+<img id="vanpersie" style="position:relative; left: 100%" src="vanpersie_cropped.png">
+
 </body>
 </html>
