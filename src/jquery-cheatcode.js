@@ -181,6 +181,8 @@
             }
             if (activeCheat.length === cheatIndex) {
                 var cheatCallback = callbackTable[activeCheat[0]];
+                debug("Code complete!  Resetting.");
+                cheatIndex = 0;
                 cheatCallback(e);
             }
         }
