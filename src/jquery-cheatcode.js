@@ -11,7 +11,7 @@
         SPACE : 32,
         DEL : 46,
         ENTER : 13,
-        // keypad 0 is 96, other numbers follow
+        // keypad 0 is 96, other numbers follow, then the operators
         KEYPAD_0 : 96,
         KEYPAD_1 : 97,
         KEYPAD_2 : 98,
@@ -21,10 +21,27 @@
         KEYPAD_6 : 102,
         KEYPAD_7 : 103,
         KEYPAD_8 : 104,
-        KEYPAD_9 : 105
-        // top-row 0 is 48
-        // A is 65
+        KEYPAD_9 : 105,
+        KEYPAD_MULTIPLY : 106,
+        KEYPAD_ADD      : 107,
+        KEYPAD_SUBTRACT : 109,
+        KEYPAD_DIVIDE   : 111,
+        KEYPAD_POINT    : 110,
+        // annoying special cases:
+        ';' : 186,
+        '=' : 187,
+        ',' : 188,
+        '-' : 189,
+        '.' : 190,
+        '/' : 191,
+        '`' : 192,
+        '[' : 219,
+        '\\': 220,
+        ']' : 221,
+        "'" : 222
+
     };
+    // top-row 0 is 48, A is 65, use those as offsets
     var ZERO_KEY_CODE = 48;
     var A_KEY_CODE = 65;
     var A_CHARACTER_CODE = "A".charCodeAt(0); // abundance of caution
@@ -32,7 +49,13 @@
     var KONAMI = [ "UP", "UP", "DOWN", "DOWN", "LEFT", "RIGHT", "LEFT", "RIGHT", "B", "A" ];
 
     var TIMEOUT_MILLISECONDS = 10000;
+    var DEBUG = false;
 
+    function debug() {
+        if (DEBUG && console && console.log) {
+            console.log.apply(console, arguments);
+        }
+    }
     function demo_callback(e) {
         alert("Cheat code invoked!");
     }
@@ -87,16 +110,16 @@
             var now = new Date().getTime();
             if (0 !== cheatIndex) {
                 if (now - lastKeydownTime >= TIMEOUT_MILLISECONDS) {
-                    console.log("Timed out: resetting");
+                    debug("Timed out: resetting");
                     cheatIndex = 0;
                 }
             }
             if (activeCheat[cheatIndex] === e.which) {
-                console.log("incrementing");
+                debug("incrementing");
                 cheatIndex++;
                 lastKeydownTime = now;
             } else {
-                console.log("Resetting");
+                debug("Resetting", e.which );
                 cheatIndex = 0;
             }
             if (activeCheat.length === cheatIndex) {
@@ -107,6 +130,10 @@
     }
 
     $.fn.cheatcode = function(codeOrCallback, callbackOrNothing){
+        if ("debug" === codeOrCallback) {
+            DEBUG = true;
+            return this;
+        }
         var userCode;
         var callback;
         if (undefined !== codeOrCallback) {
@@ -132,8 +159,10 @@
         }
 
         activeCheat = toKeyCode(userCode);
+        debug(activeCheat);
         cheatCallback = callback;
         cheatIndex = 0;
+        // easier to take it off and put it on again than to check if it's on already:
         this.off("keydown", cheat_keydown);
         this.on("keydown", cheat_keydown);
         return this;
