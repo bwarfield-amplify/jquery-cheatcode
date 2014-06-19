@@ -9,6 +9,12 @@
    I have not gone to such efforts for Opera.
 
    Basic usage: $(document).cheatcode(function(event){alert("We did it!");});
+
+   Different callbacks can be added for different codes, as long as they start with different
+   keystrokes (this seems like a modest constraint).  The behavior can also be limited to specific
+   parts of the document by calling the plugin on an arbitrary jQuery collection, but the codes
+   themselves will still be global: the only thing affected (currently) by narrowing the scope of the
+   code is the set of objects whose keydown events will be captured.
  */
 (function($) {
     /*
@@ -136,28 +142,45 @@
     /* closed-over variables */
     var activeCheat;
     var cheatIndex;
-    var cheatCallback;
     var lastKeydownTime;
+
+    /*
+      Multi-code support: these tables provide a lookup from the first character in a code
+      to the remaining characters and the callback function.
+      This implies that no two codes can be used at once that have the same initial keystroke:
+      this does not strike me as an unreasonable limitation.
+     */
+    var codeTable = {};
+    var callbackTable = {};
 
     /* keydown handler */
     function cheat_keydown(e) {
-        if (undefined !== activeCheat) {
-            var now = new Date().getTime();
-            if (0 !== cheatIndex) {
-                if (now - lastKeydownTime >= TIMEOUT_MILLISECONDS) {
-                    debug("Timed out: resetting");
-                    cheatIndex = 0;
-                }
+        var charCode = e.which;
+        var now = new Date().getTime();
+        // check for timeouts:
+        if (0 !== cheatIndex) {
+            if (now - lastKeydownTime >= TIMEOUT_MILLISECONDS) {
+                debug("Timed out: resetting");
+                cheatIndex = 0;
             }
-            if (activeCheat[cheatIndex] === e.which) {
+        }
+        // if we timed out (this time) or got reset (previously), see if this is the first character of a code:
+        if (0 === cheatIndex) {
+            activeCheat = codeTable[charCode];
+            debug("Code lookup found ", activeCheat);
+        }
+        // if it was, keep going; if it wasn't, we're done
+        if (undefined !== activeCheat) {
+            if (activeCheat[cheatIndex] === charCode) {
                 debug("incrementing");
                 cheatIndex++;
                 lastKeydownTime = now;
             } else {
-                debug("Resetting", e.which );
+                debug("Resetting", charCode );
                 cheatIndex = 0;
             }
             if (activeCheat.length === cheatIndex) {
+                var cheatCallback = callbackTable[activeCheat[0]];
                 cheatCallback(e);
             }
         }
@@ -182,6 +205,9 @@
                 callback = codeOrCallback;
                 break;
             case Array:
+                if (0 === codeOrCallback.length) {
+                    throw "Empty cheat code";
+                }
                 userCode = codeOrCallback;
                 if (undefined !== callbackOrNothing && Function === callbackOrNothing.constructor) {
                     callback = callbackOrNothing;
@@ -198,9 +224,11 @@
             callback = demo_callback;
         }
 
-        activeCheat = toKeyCode(userCode);
-        debug(activeCheat);
-        cheatCallback = callback;
+        var translatedCode = toKeyCode(userCode);
+
+        debug(translatedCode);
+        codeTable[translatedCode[0]] = translatedCode;
+        callbackTable[translatedCode[0]] = callback;
         cheatIndex = 0;
         // easier to take it off and put it on again than to check if it's on already:
         this.off("keydown", cheat_keydown);
