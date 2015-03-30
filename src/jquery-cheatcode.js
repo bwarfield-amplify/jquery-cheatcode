@@ -86,7 +86,7 @@
         "timeout" : function(timeoutmillis) {
             if (0 < timeoutmillis) { TIMEOUT_MILLISECONDS = timeoutmillis; }
             else { TIMEOUT_MILLISECONDS = 10000; }
-        },
+        }
     };
     function debug() {
         if (DEBUG && console && console.log) {
